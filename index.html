@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SAFE-DR — Selective Evidence Routing and Asymmetric Arbitration for Cross-Center DR Grading</title>
+<meta name="description" content="SAFE-DR: frozen FLAIR + D²-Mamba with boundary routing and asymmetric arbitration for five-grade diabetic retinopathy grading across centres. BME34145 group project." />
+<style>
+:root{
+  --bg:#07090c;--bg2:#0b0e13;--card:#10141c;--card2:#141924;--border:#1f2634;--border2:#2a3245;--lit:#3a4560;
+  --text:#eef2f9;--text2:#a8b3c7;--text3:#6b7688;
+  --accent:#7fb3ff;--accent2:#a3c6ff;--soft:rgba(127,179,255,.08);--teal:#6fdbe0;
+  --ok:#5fd39a;--warn:#ffb86b;--bad:#ff6b7a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{font-family:Inter,'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.mono,code{font-family:'JetBrains Mono',Consolas,monospace}
+code{background:var(--card2);border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:.9em}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent2)}
+.glow{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.glow::before,.glow::after{content:'';position:absolute;border-radius:50%;filter:blur(140px)}
+.glow::before{width:800px;height:800px;background:rgba(60,100,180,.18);top:-250px;left:50%;transform:translateX(-50%)}
+.glow::after{width:600px;height:600px;background:rgba(50,90,140,.12);top:45%;right:-200px}
+/* nav */
+.navw{position:fixed;top:18px;left:0;right:0;display:flex;justify-content:center;z-index:100;padding:0 16px}
+nav{display:flex;align-items:center;gap:22px;padding:9px 12px 9px 20px;background:rgba(16,20,28,.78);backdrop-filter:blur(22px);border:1px solid var(--border);border-radius:100px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.brand{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;padding-right:18px;border-right:1px solid var(--border2);color:var(--text)}
+.brand::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.nl{display:flex;gap:2px;flex-wrap:wrap}
+.nl a{color:var(--text3);font-size:13px;font-weight:500;padding:7px 12px;border-radius:100px}
+.nl a:hover{color:var(--text);background:rgba(255,255,255,.04)}
+/* layout */
+main{max-width:1180px;margin:0 auto;padding:0 28px}
+section{padding:84px 0 20px}
+.kicker{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:10px}
+h2{font-size:38px;line-height:1.15;letter-spacing:-.025em;font-weight:800;margin-bottom:16px}
+h3{font-size:19px;font-weight:700;margin-bottom:6px}
+.lead{font-size:18px;color:var(--text2);max-width:880px}
+.muted{color:var(--text3)}
+/* hero */
+.hero{padding:150px 0 30px;text-align:center}
+.tagline{display:inline-block;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);border:1px solid var(--border2);background:var(--card);padding:7px 14px;border-radius:100px;margin-bottom:26px}
+.hero h1{font-size:84px;font-weight:800;letter-spacing:-.045em;line-height:1;background:linear-gradient(180deg,#fff,#a8c4ef);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{font-size:24px;line-height:1.4;color:var(--text);max-width:900px;margin:22px auto 0;font-weight:500;letter-spacing:-.01em}
+.authors{margin-top:22px;color:var(--text2);font-size:16px}
+.authors b{color:var(--text);font-weight:600}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:12px;background:var(--card);border:1px solid var(--border2);color:var(--text);font-weight:600;font-size:14.5px;transition:all .2s}
+.btn:hover{border-color:var(--lit);background:var(--card2);color:var(--text)}
+.btn.pri{background:var(--accent);color:#08101d;border-color:var(--accent)}
+.btn.pri:hover{background:var(--accent2)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:54px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px 28px;text-align:left}
+.kpi .v{font-size:46px;font-weight:800;letter-spacing:-.03em;color:var(--accent)}
+.kpi .l{color:var(--text2);font-size:15px}
+/* cards */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px;align-items:start}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px}
+.card p{color:var(--text2);font-size:15.5px}
+.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:100px;margin-bottom:10px}
+.g-ok{background:rgba(95,211,154,.12);color:var(--ok)}.g-warn{background:rgba(255,184,107,.12);color:var(--warn)}.g-bad{background:rgba(255,107,122,.12);color:var(--bad)}
+.num{display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;background:var(--soft);border:1px solid var(--border2);color:var(--accent);font-weight:800;font-size:14px;margin-bottom:10px}
+figure{background:#fff;border-radius:16px;padding:14px;border:1px solid var(--border)}
+figure img{width:100%;display:block}
+figcaption{color:var(--text3);font-size:13.5px;margin-top:10px;padding:0 4px}
+.figdark figcaption{color:#5b6573}
+/* video */
+.videobox{margin-top:26px;border-radius:20px;overflow:hidden;border:1px solid var(--border2);background:#000;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.videobox video{width:100%;display:block}
+.note{margin-top:12px;font-size:14px;color:var(--warn);background:rgba(255,184,107,.06);border:1px solid rgba(255,184,107,.3);padding:10px 14px;border-radius:12px}
+/* architecture */
+.arch{margin-top:26px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;text-align:center}
+.arch img{max-width:100%;border-radius:12px;background:#fff}
+.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;justify-content:center}
+.flow div{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600}
+.flow div small{display:block;color:var(--text3);font-weight:500;font-size:12px}
+.flow span{align-self:center;color:var(--text3)}
+/* tables */
+.tw{overflow-x:auto;margin-top:22px;border:1px solid var(--border);border-radius:16px}
+table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:760px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+th{background:var(--card2);color:var(--text2);font-weight:600;font-size:13px;letter-spacing:.02em}
+td{color:var(--text2)}
+tr.ours td{background:rgba(111,219,224,.07);color:var(--text);font-weight:600}
+td.best,tr.ours td.best{color:var(--teal);font-weight:800}
+tbody tr:last-child td{border-bottom:none}
+/* try it */
+.try{display:grid;grid-template-columns:330px 1fr;gap:18px;margin-top:26px}
+select,button{font:inherit}
+select{width:100%;background:var(--card2);color:var(--text);border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:14px}
+button{background:var(--accent);color:#08101d;border:none;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
+button.sec{background:var(--card2);color:var(--text);border:1px solid var(--border2)}
+.ctl{display:flex;flex-direction:column;gap:12px}
+.ctl .row{display:flex;gap:8px;flex-wrap:wrap}
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;opacity:.35;transition:opacity .35s,border-color .35s}
+.step.on{opacity:1;border-color:var(--border2)}
+.step.skip{opacity:.3}
+.step h4{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.step .txt{font-size:15px;color:var(--text2)}
+.step .txt b{color:var(--text)}
+.bars{display:flex;gap:8px;align-items:flex-end;height:74px;margin-top:8px}
+.bars div{flex:1;background:#4f7fcf;border-radius:4px 4px 1px 1px;position:relative;min-height:2px;transition:height .5s}
+.bars div.hi{background:#3fb6bd}
+.bars div span{position:absolute;bottom:100%;left:0;right:0;text-align:center;font-size:11.5px;color:var(--text2)}
+.bars div em{position:absolute;top:100%;left:0;right:0;text-align:center;font-size:11.5px;color:var(--text3);font-style:normal}
+.res{font-size:22px;font-weight:800}
+.verify{font-size:14px;color:var(--text2)}
+footer{margin:80px 0 40px;padding-top:26px;border-top:1px solid var(--border);color:var(--text3);font-size:13.5px}
+ul.clean{list-style:none}
+ul.clean li{padding:6px 0 6px 22px;position:relative;color:var(--text2)}
+ul.clean li::before{content:'—';position:absolute;left:0;color:var(--text3)}
+@media(max-width:900px){.kpis,.grid3,.grid2,.try{grid-template-columns:1fr}.hero h1{font-size:56px}.nl{display:none}}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="navw"><nav>
+  <a class="brand" href="#top">SAFE-DR</a>
+  <div class="nl">
+    <a href="#why">Motivation</a><a href="#demo">Demo</a><a href="#method">Method</a>
+    <a href="#results">Results</a><a href="#try">Try it</a><a href="#limits">Limitations</a><a href="#repro">Reproduce</a>
+  </div>
+</nav></div>
+
+<main id="top">
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <div class="tagline">BME34145 · AIDA for Health Care and Smart Ageing · Group 16</div>
+  <h1>SAFE-DR</h1>
+  <p class="sub">Selective Evidence Routing and Asymmetric Arbitration for Cross-Center DR Grading with Frozen Foundation Models</p>
+  <p class="authors"><b>XIA Wangding</b> · <b>Wang Xilin</b> · <b>Wang Guangzhen</b> · <b>Tian Li</b> · <b>Yang Haohan</b></p>
+  <div class="btns">
+    <a class="btn pri" href="#demo">▶ Demo video</a>
+    <a class="btn" href="#try">Interactive case replay</a>
+    <a class="btn" href="#method">Method</a>
+    <a class="btn" href="#results">4-cohort results</a>
+    <a class="btn" href="#repro">Reproducibility</a>
+  </div>
+  <div class="kpis" id="kpis"></div>
+</header>
+
+<!-- ===================== WHY ===================== -->
+<section id="why">
+  <div class="kicker">Motivation</div>
+  <h2>The five DR grades decide who needs care, and how urgently</h2>
+  <p class="lead">Diabetic retinopathy is the leading preventable cause of blindness in older adults with diabetes. Early stages are symptom-free, so patients depend on regular fundus screening in community clinics, where each grade maps to a different care pathway.</p>
+  <div class="grid3">
+    <div class="card"><span class="pill g-ok">GRADE 0 – 1</span><h3>Community follow-up</h3><p>No or mild DR. Re-screen routinely; keeps scarce hospital ophthalmology slots free.</p></div>
+    <div class="card"><span class="pill g-warn">GRADE 2</span><h3>Refer and monitor</h3><p>Moderate non-proliferative DR. Needs referral to ophthalmology for close monitoring.</p></div>
+    <div class="card"><span class="pill g-bad">GRADE 3 – 4</span><h3>Treat urgently</h3><p>Severe NPDR or proliferative DR. Sight-threatening: needs prompt clinical intervention.</p></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <h3 style="margin-top:8px">What a deployable grader must deliver</h3>
+      <ul class="clean">
+        <li><b>Small grade error</b>: MAE = mean |predicted − true grade|, so missing by four grades costs more than missing by one.</li>
+        <li><b>No severe under-grading</b>: L2 counts true Grade 3/4 graded 0–2; L3 counts any under-grade of a Grade 3/4 eye.</li>
+        <li><b>Low compute</b>: frozen backbones, no per-site re-training, and no expensive tools on images that do not need them.</li>
+      </ul>
+      <h3 style="margin-top:22px">Why current models do not deploy</h3>
+      <ul class="clean">
+        <li><b>Blanket tool calls</b>: segmenting every image wastes compute, and cross-site segmentation noise overturns correct first reads.</li>
+        <li><b>Visual re-adaptation</b>: re-tuning image features biases external grades downward (L2/L3 <span id="vis"></span>).</li>
+        <li><b>Symmetric trust</b>: a lesion the tool misses is read as “no lesion”, so true patients are down-graded.</li>
+      </ul>
+    </div>
+    <figure class="figdark"><img src="assets/fig/baselines_mae.png" alt="Mean MAE of baselines" />
+      <figcaption>Same 5,612 images from 4 external cohorts, frozen inputs. Every adapter or fusion method is worse than a plain FLAIR linear probe.</figcaption></figure>
+  </div>
+</section>
+
+<!-- ===================== DEMO ===================== -->
+<section id="demo">
+  <div class="kicker">Demonstration</div>
+  <h2>One fundus photo through SAFE-DR</h2>
+  <p class="lead">Four real cached external cases: a confident healthy eye (fast path), a borderline eye upgraded to severe, a downgrade blocked by an empty haemorrhage mask, and a failure case where the router does not call the expert.</p>
+  <div class="videobox"><video controls preload="metadata" playsinline poster="assets/demo_poster.jpg"><source src="demo.mp4" type="video/mp4" /></video></div>
+  <div class="note"><b>Recorded replay.</b> Every probability, margin and decision is recomputed by our released code on real cached rows (IDRiD #346, IDRiD #62, EyePACS #1207, EyePACS #231). The cache contains no original images. The fundus photos are therefore public illustrative images, and the lesion overlays come from a classical filter, not D²-Mamba output.</div>
+</section>
+
+<!-- ===================== METHOD ===================== -->
+<section id="method">
+  <div class="kicker">Method</div>
+  <h2>Two frozen backbones, fewer than 800 trainable parameters</h2>
+  <p class="lead">SAFE-DR follows an ophthalmologist's routine. It forms a first opinion, consults a specialist tool only when that opinion is uncertain, and changes its mind only on positive evidence.</p>
+  <div class="arch" id="arch">
+    <img src="assets/architecture.png" alt="SAFE-DR architecture" onerror="this.remove();document.getElementById('flow').style.display='flex'" />
+    <div class="flow" id="flow" style="display:none">
+      <div>Fundus photo</div><span>→</span>
+      <div>FLAIR ❄<small>frozen encoder</small></div><span>→</span>
+      <div>36-D probe<small>initial p₀</small></div><span>→</span>
+      <div>Boundary router<small>m ≤ κ ?</small></div><span>→</span>
+      <div>D²-Mamba ❄<small>only if m ≤ κ</small></div><span>→</span>
+      <div>Two lesion heads<small>mask ‖ probability map</small></div><span>→</span>
+      <div>Asymmetric arbiter<small>≤ 1 grade</small></div><span>→</span>
+      <div>Final grade</div>
+    </div>
+  </div>
+  <div class="grid2" style="grid-template-columns:repeat(4,1fr)">
+    <div class="card"><div class="num">1</div><h3>Restricted anchor</h3><p>Frozen FLAIR features are projected onto a source-locked 36-D subspace (32 PCA + 4 class directions) and read by a linear probe. The lesion stage never edits visual features.</p></div>
+    <div class="card"><div class="num">2</div><h3>Boundary router</h3><p>Margin m is the distance from p₀'s cumulative probability to 0.5 at the nearest legal grade boundary. Only images with m ≤ κ = 0.219 (source 30th percentile) are segmented.</p></div>
+    <div class="card"><div class="num">3</div><h3>Dual-granularity heads</h3><p>A mask head reads 21 statistics of clear lesion masks; a probability-map head reads 28 statistics of faint, below-threshold lesion signals. They are trained independently (33→8→4, 304 params each) and their outputs are averaged.</p></div>
+    <div class="card"><div class="num">4</div><h3>Asymmetric arbiter</h3><p>Move at most one grade, and only if the expected-MAE gain passes a threshold (0.02 / 0.18 up, 0.25 down). An empty MA or haemorrhage mask blocks a downgrade.</p></div>
+  </div>
+</section>
+
+<!-- ===================== RESULTS ===================== -->
+<section id="results">
+  <div class="kicker">Results</div>
+  <h2>Lowest MAE on every external cohort</h2>
+  <p class="lead">5,612 images from MMRDR (held-out source fold), DeepDRiD, EyePACS and IDRiD. Per-cohort MAE; mean, accuracy and QWK are equal-weight cohort averages; L2/L3 are counts over 514 severe images. Best value per column is highlighted.</p>
+  <div class="tw"><table id="t1"></table></div>
+  <div class="grid2">
+    <figure class="figdark"><img src="assets/fig/progressive.png" alt="Progressive ablation" />
+      <figcaption>Progressive ablation. With routing, 73.5% of segmentation calls are skipped and MAE still improves (0.2855 → 0.2797): routing blocks 57 harmful revisions and gives up 15 helpful ones.</figcaption></figure>
+    <figure class="figdark"><img src="assets/fig/severe_undergrading.png" alt="Severe under-grading" />
+      <figcaption>Severe under-grading. Re-adapting visual features raises L2/L3 to 156/214; SAFE-DR lowers them to 113/161.</figcaption></figure>
+  </div>
+  <div class="tw"><table id="t2"></table></div>
+  <p class="muted" style="margin-top:10px;font-size:14px">Not best everywhere: CLAP has slightly higher macro sensitivity, and TDA has a lower L3 rate. Baselines are our frozen-input adaptations of the authors' code.</p>
+</section>
+
+<!-- ===================== TRY ===================== -->
+<section id="try">
+  <div class="kicker">Interactive replay</div>
+  <h2>Run SAFE-DR in your browser</h2>
+  <p class="lead">This page contains the archived probe and head weights plus 199 cached external rows. Pick a case: the JavaScript port of <code>b30.py</code> recomputes p₀, the route, both lesion heads and the arbiter's decision. It then checks the result against the Python reference.</p>
+  <div class="try">
+    <div class="card ctl">
+      <label class="muted" for="sel">Cached case</label>
+      <select id="sel" size="12"></select>
+      <div class="row"><button id="run">Run SAFE-DR</button><button class="sec" id="rnd">Random</button></div>
+      <div class="row"><button class="sec" id="all">Verify all 199 rows</button></div>
+      <div class="verify" id="verify"></div>
+    </div>
+    <div class="steps">
+      <div class="step" id="s1"><h4>1 · Initial posterior p₀ (frozen FLAIR → 36-D probe)</h4><div class="bars" id="b1"></div><div class="txt" id="x1" style="margin-top:20px"></div></div>
+      <div class="step" id="s2"><h4>2 · Boundary router</h4><div class="txt" id="x2"></div></div>
+      <div class="step" id="s3"><h4>3 · Lesion heads (mask head ‖ probability-map head → averaged)</h4><div class="bars" id="b3"></div><div class="txt" id="x3" style="margin-top:20px"></div></div>
+      <div class="step" id="s4"><h4>4 · Asymmetric arbiter → final grade</h4><div class="txt" id="x4"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LIMITS ===================== -->
+<section id="limits">
+  <div class="kicker">Discussion</div>
+  <h2>Failure case and limitations</h2>
+  <div class="grid3">
+    <div class="card"><span class="pill g-bad">FAILURE</span><h3>Confident but wrong</h3><p>EyePACS #231 is a reference Grade 1. FLAIR gives Grade 0 with probability 0.917 (margin 0.417 &gt; κ), so the router never calls D²-Mamba. Forcing segmentation would have produced Grade 1. Routing trades a few such misses for efficiency.</p></div>
+    <div class="card"><span class="pill g-warn">LIMITATIONS</span><h3>What we did not show</h3><p>Retrospective historical cohorts with published grades. EyePACS overlaps FLAIR pre-training. Patient-level linkage is only partly verified. The 73.5% saving counts tool calls; end-to-end GPU latency was not measured. There is no prospective clinical validation.</p></div>
+    <div class="card"><span class="pill g-ok">NEXT</span><h3>Towards deployment</h3><p>Calibrate κ per site with unlabelled images, measure latency on low-cost clinic hardware, and run a prospective community-screening pilot with ophthalmologist review.</p></div>
+  </div>
+</section>
+
+<!-- ===================== REPRO ===================== -->
+<section id="repro">
+  <div class="kicker">Reproducibility</div>
+  <h2>Every number on this page is regenerated by code</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Run</h3>
+      <p><code>pip install -r requirements.txt</code><br/><code>python -m unittest -q test_b30</code><br/><code>python evaluate.py</code></p>
+      <p style="margin-top:10px">CPU only, NumPy only. The code rebuilds initial posteriors from cached 36-D coordinates (max deviation 5e−12 from the archive), recomputes both heads, and checks routed and request-all grades image by image. Expected output: MAE 0.2797, accuracy 75.96%, QWK 0.8626, L2/L3 113/161, 1,489 requests.</p>
+    </div>
+    <div class="card">
+      <h3>Team and disclosure</h3>
+      <ul class="clean">
+        <li>XIA Wangding: clinical framing and evaluation protocol</li>
+        <li>Wang Xilin: baselines and failure analysis</li>
+        <li>Wang Guangzhen: method and architecture</li>
+        <li>Tian Li: demo website and video</li>
+        <li>Yang Haohan: results, ablations and report</li>
+      </ul>
+      <p style="margin-top:8px">Frozen models: FLAIR (Silva-Rodríguez et al., MedIA 2025) and D²-Mamba (Yu et al., 2026). AI assistance was used for code packaging, documentation and presentation materials.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Image credits: normal fundus by M. Häggström (CC0); EDA01/EDA03 by the National Eye Institute (public domain); moderate DR fundus from Hao et al., PLoS ONE 2022 (CC BY 4.0). Images are illustrative and are not the cached study images.<br/>
+  SAFE-DR · BME34145 Group 16 · 2026
+</footer>
+</main>
+
+<script src="assets/results.js"></script>
+<script src="assets/replay.js"></script>
+<script>
+/* ---------------- tables & KPIs from reproduced_tables.json ---------------- */
+const R = window.RESULTS, M = R.mean, C = R.cohorts;
+const COH = ["mmrdr","deepdrid","eyepacs","idrid"], CN = ["MMRDR","DeepDRiD","EyePACS","IDRiD"];
+const METH = [["Base","FLAIR linear probe"],["clap","CLAP"],["clip","CLIP-Adapter"],["tda","TDA"],["etmc","ETMC"],
+              ["trust","Trust4Conflict"],["pnea","PNEA-MIL"],["aor","AOR-DR"],["M4","SAFE-DR (ours)"]];
+document.getElementById("vis").textContent = `${M.old_visual_on.l2}/${M.old_visual_on.l3} vs ${M.Base.l2}/${M.Base.l3}`;
+document.getElementById("kpis").innerHTML = [
+  [`${(R.requests.mmrdr+R.requests.deepdrid+R.requests.eyepacs+R.requests.idrid).toLocaleString()} / 5,612`, "images sent to segmentation (26.5%): 73.5% of expert calls skipped"],
+  [M.M4.mae.toFixed(4), `mean MAE over 4 cohorts, vs ${M.Base.mae.toFixed(4)} for the best of 8 baselines`],
+  [`${M.M4.l2} / ${M.M4.l3}`, `severe L2 / L3 under-grades, vs ${M.Base.l2} / ${M.Base.l3} (linear probe)`]
+].map(([v,l])=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+function table(id, head, rows){ document.getElementById(id).innerHTML =
+  `<thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody>`; }
+const ks = METH.map(m=>m[0]);
+const bestMin = f => Math.min(...ks.map(f)), bestMax = f => Math.max(...ks.map(f));
+const cell = (v, best, txt) => `<td class="${Math.abs(v-best)<1e-12?'best':''}">${txt}</td>`;
+table("t1", ["Method",...CN,"Mean MAE ↓","Acc ↑","QWK ↑","L2 / L3 ↓"], METH.map(([k,n])=>
+  `<tr class="${k==='M4'?'ours':''}"><td>${n}</td>${COH.map(d=>cell(C[d][k].mae, bestMin(x=>C[d][x].mae), C[d][k].mae.toFixed(4))).join("")}
+   ${cell(M[k].mae,bestMin(x=>M[x].mae),M[k].mae.toFixed(4))}${cell(M[k].accuracy,bestMax(x=>M[x].accuracy),(M[k].accuracy*100).toFixed(2)+"%")}
+   ${cell(M[k].qwk,bestMax(x=>M[x].qwk),M[k].qwk.toFixed(4))}${cell(M[k].l2,bestMin(x=>M[x].l2),M[k].l2+" / "+M[k].l3)}</tr>`));
+const pc = x => (x*100).toFixed(2)+"%";
+table("t2", ["Method","Macro-F1 ↑","Sens ↑","Spec ↑","L2 rate ↓","L3 rate ↓"], METH.map(([k,n])=>
+  `<tr class="${k==='M4'?'ours':''}"><td>${n}</td>${cell(M[k].f1,bestMax(x=>M[x].f1),pc(M[k].f1))}${cell(M[k].sensitivity,bestMax(x=>M[x].sensitivity),pc(M[k].sensitivity))}
+   ${cell(M[k].specificity,bestMax(x=>M[x].specificity),pc(M[k].specificity))}${cell(M[k].l2_rate,bestMin(x=>M[x].l2_rate),pc(M[k].l2_rate))}${cell(M[k].l3_rate,bestMin(x=>M[x].l3_rate),pc(M[k].l3_rate))}</tr>`));
+
+/* ---------------- JavaScript port of b30.py ---------------- */
+const P = window.REPLAY, W = P.weights, CUT = P.config.cut, TH = P.config.thresholds;
+const f32 = Math.fround;
+function softmax(z){const m=Math.max(...z);const e=z.map(v=>Math.exp(v-m));const s=e.reduce((a,b)=>a+b,0);return e.map(v=>v/s);}
+function anchor(x){return softmax(W.lp_weight.map((w,i)=>w.reduce((a,wj,j)=>a+wj*x[j],0)+W.lp_bias[i]));}
+function cum4(p){const c=[];let s=0;for(let i=0;i<4;i++){s+=p[i];c.push(s);}return c;}
+function lowerMedian(p){return cum4(p).filter(v=>v<.5).length;}
+function margin(p){const g=lowerMedian(p),c=cum4(p);const up=g<4?c[Math.min(g,3)]-.5:Infinity;const dn=g>0?.5-c[Math.max(g-1,0)]:Infinity;return Math.min(up,dn);}
+function sigmoid(x){const z=Math.exp(-Math.abs(x));return x>=0?1/(1+z):z/(1+z);}
+function condLogits(p){const eps=2.220446049250313e-16;const out=[];for(let k=0;k<4;k++){let tail=0;for(let j=k+1;j<5;j++)tail+=p[j];
+  const parent=tail+p[k];let r=parent>0?tail/parent:.5;r=Math.min(Math.max(r,eps),1-eps);out.push(Math.log(r)-Math.log1p(-r));}return out;}
+function readout(p0,raw,arm){
+  const sc=W[arm+"_scale"],w1=W[arm+"_w1"],b1=W[arm+"_b1"],w2=W[arm+"_w2"];
+  let ev=raw.map((v,i)=>{const a=f32(v),s=f32(sc[i]);const r=a/Math.hypot(a,s);return r*r;});
+  if(arm==="A21") ev=ev.concat([0,0,0,0,0,0,0]);
+  const p=p0.map(f32);
+  const net=o=>{const inp=p.concat(o);const h=w1.map((row,i)=>row.reduce((a,wij,j)=>a+wij*inp[j],0)+b1[i]).map(v=>v*sigmoid(v));
+    return w2.map(row=>row.reduce((a,wij,j)=>a+wij*h[j],0));};
+  const d1=net(ev),d0=net(ev.map(()=>0));const delta=d1.map((v,i)=>v-d0[i]);
+  if(delta.every(v=>v===0)) return p0.slice();
+  const cl=condLogits(p0);let t=1;const tail=[];for(let k=0;k<4;k++){t*=sigmoid(cl[k]+delta[k]);tail.push(t);}
+  const full=[1,...tail,0];return [0,1,2,3,4].map(i=>full[i]-full[i+1]);
+}
+function revise(p0,q,hard){
+  const g=lowerMedian(p0),c=cum4(q);
+  const upGain=1-2*c[Math.min(g,3)],dnGain=2*c[Math.max(g-1,0)]-1;
+  const up=g<4&&upGain>=(g<2?TH[0]:TH[1]);let dn=g>0&&dnGain>=TH[2];let veto=false;
+  if(hard){veto=(g===1&&hard[0]===0)||(g===2&&hard[3]===0); if(veto&&dn) dn=false; else veto=false;}
+  return {grade:g+(up?1:0)-(dn?1:0),upGain,dnGain,veto,up,dn};
+}
+function safeDR(row){
+  const p0=anchor(row.x),g0=lowerMedian(p0),m=margin(p0),requested=m<=CUT;
+  const out={p0,g0,m,requested,final:g0};
+  if(requested){const q21=readout(p0,row.a21,"A21"),q28=readout(p0,row.a28,"A28");const q=q21.map((v,i)=>.5*(v+q28[i]));
+    Object.assign(out,{q21,q28,q},revise(p0,q,row.a21));out.final=out.grade;}
+  return out;
+}
+/* ---------------- UI ---------------- */
+const NAMES=["No DR","Mild NPDR","Moderate NPDR","Severe NPDR","Proliferative DR"];
+const ACT=["community follow-up","community follow-up","refer for close monitoring","urgent referral & treatment","urgent referral & treatment"];
+const demoRows={}; Object.entries(P.demo).forEach(([k,v])=>demoRows[v.cohort+"#"+v.row]=k);
+const sel=document.getElementById("sel");
+P.sample.forEach((r,i)=>{const o=document.createElement("option");o.value=i;const tag=demoRows[r.cohort+"#"+r.row];
+  o.textContent=`${r.cohort} #${r.row} · reference G${r.y}${tag?"  ★ demo: "+tag:""}`;sel.appendChild(o);});
+sel.value=P.sample.findIndex(r=>r.cohort==="IDRiD"&&r.row===62);
+const bars=(el,p,hi)=>{el.innerHTML=p.map((v,i)=>`<div class="${i===hi?'hi':''}" style="height:${Math.max(2,v*80)}%"><span>${v.toFixed(2)}</span><em>G${i}</em></div>`).join("");};
+function run(){
+  const r=P.sample[+sel.value]; const o=safeDR(r);
+  ["s1","s2","s3","s4"].forEach(s=>document.getElementById(s).className="step");
+  const on=(s,c="on")=>document.getElementById(s).className="step "+c;
+  on("s1"); bars(document.getElementById("b1"),o.p0,o.g0);
+  document.getElementById("x1").innerHTML=`Initial grade g₀ = <b>G${o.g0}</b> (${NAMES[o.g0]}).`;
+  on("s2"); document.getElementById("x2").innerHTML=o.requested
+    ? `Margin <b class="mono">m = ${o.m.toFixed(3)} ≤ κ = ${CUT.toFixed(3)}</b>: near a grade boundary → <b style="color:var(--warn)">request D²-Mamba evidence</b>.`
+    : `Margin <b class="mono">m = ${o.m.toFixed(3)} &gt; κ = ${CUT.toFixed(3)}</b>: confident → <b style="color:var(--ok)">commit, no segmentation</b>.`;
+  if(o.requested){
+    on("s3"); bars(document.getElementById("b3"),o.q,-1);
+    document.getElementById("x3").innerHTML=`Averaged lesion-head output. Hard-mask areas: MA <b class="mono">${r.a21[0].toFixed(2)}</b>, haemorrhage <b class="mono">${r.a21[3].toFixed(2)}</b>.`;
+    on("s4");
+    let why=`ΔMAE↑ = <span class="mono">${o.upGain.toFixed(3)}</span>, ΔMAE↓ = <span class="mono">${o.dnGain.toFixed(3)}</span>. `;
+    why+=o.up?"Upgrade accepted on positive evidence.":o.dn?"Downgrade accepted.":o.veto?"<b style='color:var(--warn)'>Downgrade blocked: key lesion mask is empty (missing evidence ≠ no disease).</b>":"Gain below threshold: keep the initial grade.";
+    document.getElementById("x4").innerHTML=`${why}<div class="res" style="margin-top:8px">Final G${o.final} · ${NAMES[o.final]} → ${ACT[o.final]}</div>`;
+  } else {
+    on("s3","skip"); document.getElementById("b3").innerHTML=""; document.getElementById("x3").innerHTML="Skipped (no segmentation call).";
+    on("s4"); document.getElementById("x4").innerHTML=`<div class="res">Final G${o.final} · ${NAMES[o.final]} → ${ACT[o.final]}</div>`;
+  }
+  const ok=o.final===r.y, match=o.final===r.py_final&&o.requested===r.py_requested;
+  document.getElementById("x4").innerHTML+=`<div style="margin-top:6px">Reference grade G${r.y}: ${ok?'<b style="color:var(--ok)">correct ✓</b>':`<b style="color:var(--bad)">error of ${Math.abs(o.final-r.y)} grade(s) ✗</b>`} · Python reference: ${match?'<span style="color:var(--ok)">identical</span>':'<span style="color:var(--bad)">MISMATCH</span>'}</div>`;
+}
+document.getElementById("run").onclick=run;
+document.getElementById("rnd").onclick=()=>{sel.value=Math.floor(Math.random()*P.sample.length);run();};
+sel.ondblclick=run;
+document.getElementById("all").onclick=()=>{let ok=0,req=0;P.sample.forEach(r=>{const o=safeDR(r);if(o.final===r.py_final&&o.requested===r.py_requested)ok++;if(o.requested)req++;});
+  document.getElementById("verify").innerHTML=`JS port vs Python <code>b30.py</code>: <b>${ok}/${P.sample.length}</b> rows identical (route + final grade). ${req} of these rows were routed to segmentation.`;};
+run();
+</script>
+</body>
+</html>
